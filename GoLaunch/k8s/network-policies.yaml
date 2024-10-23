@@ -1,0 +1,49 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: go-web-app-network-policy
+  namespace: go-launch-app # Ensure this matches your deployment's namespace
+spec:
+  podSelector:
+    matchLabels:
+      app: go-web-app
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector: # Allow traffic from the ingress controller
+            matchLabels:
+              app.kubernetes.io/name: ingress-nginx # Adjust if using a different ingress controller
+      ports:
+        - protocol: TCP
+          port: 8080
+    - from: # Allow probes from the kube-system namespace
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: TCP
+          port: 8080
+
+  egress:
+    - to:
+        - namespaceSelector: # Allow DNS resolution (kube-system)
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+    - to:
+        - ipBlock: # Allow access to AWS Secrets Manager (REPLACE with your region's IPs!)
+            cidr: <secrets-manager-ip-range-1>/32 # Example: replace with actual CIDR
+            # Add more ipBlock entries as needed for other IP ranges
+          ports:
+            - protocol: TCP
+              port: 443
+    - to: # Allow access to GHCR.io for image pulls (Adjust if using a different registry)
+        - ipBlock:
+            cidr: 35.192.0.0/12,35.204.0.0/14,35.240.0.0/13,104.18.0.0/20,104.154.0.0/20,104.196.0.0/20,2607:f8b0:4009:808::200e # ghcr.io IP ranges
+          ports:
+            - protocol: TCP
+              port: 443

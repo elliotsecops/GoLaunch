@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: go-web-app-quota
+  namespace: go-launch-app
+spec:
+  hard:
+    requests.cpu: "2" # Total CPU requests allowed in the namespace
+    requests.memory: 2Gi # Total memory requests
+    limits.cpu: "4" # Total CPU limits
+    limits.memory: 4Gi # Total memory limits
+    pods: "10" # Maximum number of pods
